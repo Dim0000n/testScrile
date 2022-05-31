@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script type="text/javascript">
+        var data;
+        function getData(button)
+        {
+
+            let xml = new XMLHttpRequest();        //объект для http запроса
+            xml.open("POST", "{{getData}}", true); //инициализация объекта
+            xml.setRequestHeader("Content-type", "application/x-www-form-urlencoded"); //выставляем заголовок
+
+            xml.onload = function(){     //функция обработки ответа сервера
+            let dataReply = JSON.parse(this.responseText); //парсим текст
+
+            data = dataReply["answer"]      //получаем данные
+
+            let data_length = data.length; //количество пользователей
+            let is_empty = true;               //проверяем пустой ли список
+             if(data_length != 0)               //если пользователи есть
+             {
+                for (let i = 0; i < data_length; i++)
+                    if (data[i]["username"] != "Delphine") //если кроме юзера Delphine есть хотя один другой
+                        {
+                            is_empty = false;                     //список не пуст
+                            break;
+                        }
+                if (!is_empty)                                  //если список не пуст
+                    {
+                        let div = document.getElementById("default")    //удаляем div с текстом empty list
+                        div.remove()
+                        let to_past =''                                 //переменная для добавления в html
+                        for (let i = 0; i < data_length; i++)           //собираем данные в переменную
+                            to_past += '<div class = "list" id = "l' + i + '"> <p class="lefttext"> ID ' + data[i]['id'] + '. \
+                        ' + data[i]['name'] + '.<i> ' + data[i]['email'] + '</i><p><p class="centertext">' + data[i]['phone'] + '</p><input type="button" onclick="postData(this)" class="bt right"  value="Like" id \
+                        =' + i + '></div>'
+                        div = document.getElementById("get")           //получаем блок с кнопкой get users
+                        div.insertAdjacentHTML("afterend", to_past)    //добавляем данные в html
+                    }
+             }
+            }
+
+            dataSend = JSON.stringify({
+            'action' : 'get'});        //данные для отправки на сервер
+
+            xml.send(dataSend);        //отправляем данные на сервер
+        }
+
+    //обработчик нажатия кнопки like
+    function postData(button)
+    {
+        let xml = new XMLHttpRequest();        //объект для http запроса
+        xml.open("POST", document.location.href.toString(), true); //инициализация объекта
+        xml.setRequestHeader("Content-type", "application/x-www-form-urlencoded"); //выставляем заголовок
+
+        xml.onload = function(){     //функция обработки ответа сервера
+                window.location.reload() //перезагружаем страницу, чтобы вывести отправленное сообщение
+            }
+
+        let date = new Date();  //получаем время
+        let hour = date.getHours();
+        let minutes = date.getMinutes();
+        let seconds = date.getSeconds();
+        dataSend = JSON.stringify({
+            'yourId' : 'yourId',
+            'time' : hour + ':' + minutes + ':' + seconds,
+            'userData' : {'id':data[button.id]['id'],
+            'name':data[button.id]['name'],
+            'username':data[button.id]['username'],
+            'email':data[button.id]['email'],
+            'phone':data[button.id]['phone']}});        //данные для отправки на сервер
+
+            xml.send(dataSend);        //отправляем данные на сервер
+    }
+    </script>
+    <title>testScrile</title>
+</head>
+<body>
+    <div class="center">
+        <input type="button" id="get" class="bt get" onclick="getData(this)", value="Get Users">
+    </div>
+    <div class="list" id="default">
+        <p class="lefttext">
+            Empty list
+        </p>
+    </div>
+    <p>{{req}}</p>
+</body>
+</html>
